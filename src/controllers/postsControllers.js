@@ -1,6 +1,6 @@
 const pool = require('../../db/config');
 
-const getPosts = async (req, res) => {
+const getPosts = async (req, res, next) => {
       const { published } = req.query;
   
   try {
@@ -15,14 +15,17 @@ const getPosts = async (req, res) => {
     query += ' ORDER BY created_at DESC';
     
     const result = await pool.query(query, params);
+
     res.json(result.rows);
+
   } catch (error) {
     console.error('Error obteniendo posts:', error);
-    res.status(500).json({ error: 'Error obteniendo posts' });
+    
+    next(error);
   }
 };
 
-const getPostById = async (req, res) => {
+const getPostById = async (req, res, next) => {
   try {
     const result = await pool.query(
       'SELECT * FROM posts WHERE id = $1',
@@ -30,17 +33,21 @@ const getPostById = async (req, res) => {
     );
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Post no encontrado' });
+      const error = new Error('Post no encontrado');
+      error.status = 404;
+      return next(error);
     }
     
     res.json(result.rows[0]);
+
   } catch (error) {
     console.error('Error obteniendo post:', error);
-    res.status(500).json({ error: 'Error obteniendo post' });
+
+    next(error);
   }
 };
 
-const getPostsByAuthor = async (req, res) => {
+const getPostsByAuthor = async (req, res, next) => {
   try {
     const result = await pool.query(
       'SELECT * FROM posts WHERE author_id = $1 ORDER BY created_at DESC',
@@ -48,19 +55,22 @@ const getPostsByAuthor = async (req, res) => {
     );
     
     res.json(result.rows);
+
   } catch (error) {
     console.error('Error obteniendo posts del autor:', error);
-    res.status(500).json({ error: 'Error obteniendo posts del autor' });
+
+    next(error);
   }
 };
 
-const createPost = async (req, res) => {
+const createPost = async (req, res, next) => {
     const { title, content, author_id, published } = req.body;
   
   if (!title || !content || !author_id) {
-    return res.status(400).json({ 
-      error: 'Título, contenido y author_id son requeridos' 
-    });
+    const error = new Error('Título, contenido y author_id son requeridos');
+    error.status = 400;
+
+    return next(error);
   }
   
   try {
@@ -70,18 +80,20 @@ const createPost = async (req, res) => {
     );
     
     res.status(201).json(result.rows[0]);
+    
   } catch (error) {
     console.error('Error creando post:', error);
     
     if (error.code === '23503') {
-      return res.status(404).json({ error: 'El autor especificado no existe' });
+      error.status = 404;
+      error.message = 'El autor especificado no existe';
     }
     
-    res.status(500).json({ error: 'Error creando post' });
+    next(error);
   }
 };
 
-const updatePost = async (req, res) => {
+const updatePost = async (req, res, next) => {
     const { title, content, published } = req.body;
   
   try {
@@ -91,17 +103,23 @@ const updatePost = async (req, res) => {
     );
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Post no encontrado' });
+      const error = new Error('Post no encontrado');
+      error.status = 404;
+
+      return next(error);
+      
     }
     
     res.json(result.rows[0]);
+    
   } catch (error) {
     console.error('Error actualizando post:', error);
-    res.status(500).json({ error: 'Error actualizando post' });
+
+    next(error);
   }
 };
 
-const deletePost = async (req, res) => {
+const deletePost = async (req, res, next) => {
   try {
     const result = await pool.query(
       'DELETE FROM posts WHERE id = $1',
@@ -109,13 +127,18 @@ const deletePost = async (req, res) => {
     );
     
     if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Post no encontrado' });
+      const error = new Error('Post no encontrado');
+      error.status = 404;
+      
+      return next(error);
     }
     
     res.json({ message: 'Post eliminado exitosamente' });
+
   } catch (error) {
     console.error('Error eliminando post:', error);
-    res.status(500).json({ error: 'Error eliminando post' });
+
+    next(error);
   }
 };
 
