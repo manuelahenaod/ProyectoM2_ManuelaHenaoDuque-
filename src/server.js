@@ -1,9 +1,13 @@
-const { loadEnvFile } = require('node:process');
+require('dotenv').config();
+
 const express = require('express');
+
+
+
 const authorsRouter = require('./routes/authors');
 const postsRouter = require('./routes/posts');
 
-loadEnvFile('.env');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
