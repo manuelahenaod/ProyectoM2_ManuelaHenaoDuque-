@@ -1,129 +1,111 @@
-const pool = require('../../db/config');
+const authorsServices = require('../services/authorsServices');
 
 const getAuthors = async (req, res, next) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM authors ORDER BY name'
-    );
+    const authors = await authorsServices.getAllAuthors();
 
-    res.json(result.rows);
+    res.json(authors);
 
   } catch (error) {
-    console.error('Error obteniendo autores:', error);
-
-   next(error);
+    next(error);
   }
 };
 
 const getAuthorById = async (req, res, next) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM authors WHERE id = $1',
-      [req.params.id]
-    );
-    
-    if (result.rows.length === 0) {
+    const author = await authorsServices.getAuthorById(req.params.id);
+
+    if (!author) {
       const error = new Error('Autor no encontrado');
       error.status = 404;
 
       return next(error);
     }
-    
-    res.json(result.rows[0]);
-    
+
+    res.json(author);
+
   } catch (error) {
-    console.error('Error obteniendo autor:', error);
     next(error);
   }
-}
+};
 
 const createAuthor = async (req, res, next) => {
-  const { name, email, bio } = req.body;
-  
+  const { name, email } = req.body;
+
   if (!name || !email) {
     const error = new Error('Nombre y email son requeridos');
     error.status = 400;
 
     return next(error);
-    }
-  
+  }
+
   try {
-    const result = await pool.query(
-      'INSERT INTO authors (name, email, bio) VALUES ($1, $2, $3) RETURNING *',
-      [name, email, bio || null]
-    );
-    
-    res.status(201).json(result.rows[0]);
+    const newAuthor = await authorsServices.createAuthor(req.body);
+
+    res.status(201).json(newAuthor);
 
   } catch (error) {
-    console.error('Error creando autor:', error);
-    
+
     if (error.code === '23505') {
       error.status = 409;
       error.message = 'El email ya está registrado';
     }
-    
+
     next(error);
   }
 };
 
 const updateAuthor = async (req, res, next) => {
-    const { name, email, bio } = req.body;
-  
   try {
-    const result = await pool.query(
-      'UPDATE authors SET name = COALESCE($1, name), email = COALESCE($2, email), bio = COALESCE($3, bio) WHERE id = $4 RETURNING *',
-      [name, email, bio, req.params.id]
+    const updatedAuthor = await authorsServices.updateAuthor(
+      req.params.id,
+      req.body
     );
-    
-    if (result.rows.length === 0) {
+
+    if (!updatedAuthor) {
       const error = new Error('Autor no encontrado');
       error.status = 404;
 
       return next(error);
     }
-    
-    res.json(result.rows[0]);
-    
+
+    res.json(updatedAuthor);
+
   } catch (error) {
-    console.error('Error actualizando autor:', error);
-    
+
     if (error.code === '23505') {
       error.status = 409;
       error.message = 'El email ya está registrado';
     }
-    
+
     next(error);
   }
 };
 
 const deleteAuthor = async (req, res, next) => {
-    try {
-     const result = await pool.query(
-      'DELETE FROM authors WHERE id = $1',
-      [req.params.id]
-    );
-    
-    if (result.rowCount === 0) {
+  try {
+    const deleted = await authorsServices.deleteAuthor(req.params.id);
+
+    if (!deleted) {
       const error = new Error('Autor no encontrado');
       error.status = 404;
-      
+
       return next(error);
     }
-    
-    res.json({ message: 'Autor eliminado exitosamente' });
+
+    res.json({
+      message: 'Autor eliminado exitosamente'
+    });
 
   } catch (error) {
-    console.error('Error eliminando autor:', error);
     next(error);
   }
 };
-
 
 module.exports = {
   getAuthors,
   getAuthorById,
   createAuthor,
   updateAuthor,
-  deleteAuthor,
+  deleteAuthor
 };
