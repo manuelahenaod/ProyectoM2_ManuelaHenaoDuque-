@@ -24,7 +24,7 @@ app.use('/api/posts', postsRouter);
 // Ruta raíz
 app.get('/', (req, res) => {
   res.json({ 
-    message: 'Blog API',
+    message: 'MiniBlog API DevSpark',
     endpoints: {
       authors: '/api/authors',
       posts: '/api/posts'
