@@ -8,10 +8,10 @@ info:
     email: manuelahenaod19@gmail.com
 
 servers:
+  - url: https://proyectom2manuelahenaoduque-production.up.railway.app
+    description: Producción
   - url: http://localhost:3000
     description: Desarrollo local
-  - url: https://proyectom2manuelahenaoduque-production.up.railway.app/api
-    description: Producción
 
 paths:
   /api/authors:
