@@ -1,5 +1,9 @@
 const express = require('express');
 
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const swaggerDocument = YAML.load('./openapi.yaml');
+
 const authorsRouter = require('./routes/authors');
 const postsRouter = require('./routes/posts');
 
@@ -9,6 +13,9 @@ const app = express();
 
 // Middleware para parsear JSON
 app.use(express.json());
+
+//Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Rutas
 app.use('/api/authors', authorsRouter);
