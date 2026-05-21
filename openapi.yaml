@@ -10,7 +10,7 @@ info:
 servers:
   - url: http://localhost:3000
     description: Desarrollo local
-  - url: proyectom2manuelahenaoduque-production.up.railway.app
+  - url: https://proyectom2manuelahenaoduque-production.up.railway.app/api
     description: Producción
 
 paths:
